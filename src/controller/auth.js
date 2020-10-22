@@ -2,7 +2,7 @@ const helper = require("../helper/index");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const { registerUser } = require("../model/auth");
+const { registerUser, loginUser } = require("../model/auth");
 const { getAllUser } = require("../model/users");
 
 module.exports = {
@@ -56,6 +56,57 @@ module.exports = {
 
         const result = await registerUser(setData);
         return helper.response(res, 200, "REGISTER SUCCESS", result);
+      }
+    } catch (err) {
+      return helper.response(res, 400, "BAD REQUEST", err);
+    }
+  },
+  login: async (req, res) => {
+    try {
+      const { user_email, user_password } = req.body;
+      const checkUser = await loginUser(user_email);
+      if (checkUser.length > 0) {
+        const checkPassword = bcrypt.compareSync(
+          user_password,
+          checkUser[0].user_password
+        );
+        if (checkPassword) {
+          // JWT PROCESS
+          const {
+            user_id,
+            user_name,
+            user_email,
+            user_phone,
+            user_status,
+            user_image,
+            user_role,
+          } = checkUser[0];
+
+          let payload = {
+            user_id,
+            user_name,
+            user_email,
+            user_phone,
+            user_status,
+            user_image,
+            user_role,
+          };
+
+          const token = jwt.sign(payload, process.env.JWT_KEY, {
+            expiresIn: "24h",
+          });
+
+          payload = { ...payload, token };
+          return helper.response(res, 200, "LOGIN SUCCESS", payload);
+        } else {
+          return helper.response(res, 400, "WRONG PASSWORD");
+        }
+      } else {
+        return helper.response(
+          res,
+          400,
+          "EMAIL IS NOT REGISTERED PLEASE SIGN UP FIRST"
+        );
       }
     } catch (err) {
       console.log(err);

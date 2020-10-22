@@ -16,4 +16,15 @@ module.exports = {
       });
     });
   },
+  loginUser: (email) => {
+    return new Promise((resolve, reject) => {
+      connection.query(
+        `SELECT user_id, user_name, user_email, user_phone, user_status, user_image, user_password, user_role FROM users WHERE user_email = ?`,
+        email,
+        (err, data) => {
+          !err ? resolve(data) : reject(new Error(err));
+        }
+      );
+    });
+  },
 };
