@@ -148,7 +148,48 @@ module.exports = {
               from: '"ANONYMOUS"',
               to: user_email,
               subject: "ANONYMOUS - FORGOT PASSWORD",
-              html: `<h1 style="text-align: center; color: red;">${key}</h1>`,
+              html: `<div
+              style="
+                border-radius: 20px;
+                font-family: arial;
+                width: 300px;
+                margin: 20px auto;
+                display: grid;
+                grid-template-columns: 1fr;
+                justify-items: center;
+                background-color: rgb(212, 212, 212);
+              "
+            >
+              <div style="text-align: center; color: #222; padding: 0 10px">
+                <h2>Key to Reset Your Password</h2>
+                <h1>${key}</h1>
+                <h4>The following button is for you to reset your password</h4>
+                <button
+                  href=""
+                  style="
+                    width: 160px;
+                    height: 40px;
+                    background-color: rgb(248, 225, 17);
+                    border-color: rgb(248, 225, 17);
+                    font-weight: bold;
+                    font-size: 14px;
+                    color: #111;
+                    border-radius: 10px;
+                  "
+                >
+                  CLICK HERE
+                </button>
+              </div>
+              <div
+                style="
+                  width: 100%;
+                  height: 30px;
+                  background-color: #111;
+                  border-radius: 0 0 20px 20px;
+                  margin-top: 20px;
+                "
+              ></div>
+            </div>`,
             },
             function (err) {
               if (err) {
@@ -175,6 +216,7 @@ module.exports = {
     try {
       let check = await checkKey(parseInt(user_key));
       const email = check[0].user_email;
+
       if (check.length === 0) {
         return helper.response(res, 400, "WRONG KEY!");
       } else if (user_password === undefined && user_password === "") {
