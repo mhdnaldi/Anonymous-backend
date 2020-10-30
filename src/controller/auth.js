@@ -65,7 +65,6 @@ module.exports = {
         return helper.response(res, 200, "REGISTER SUCCESS", result);
       }
     } catch (err) {
-      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },
@@ -117,7 +116,6 @@ module.exports = {
         );
       }
     } catch (err) {
-      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },
@@ -147,7 +145,7 @@ module.exports = {
             {
               from: '"ANONYMOUS"',
               to: user_email,
-              subject: "ANONYMOUS - FORGOT PASSWORD",
+              subject: "FORGOT PASSWORD",
               html: `<div
               style="
                 border-radius: 20px;
@@ -162,22 +160,22 @@ module.exports = {
             >
               <div style="text-align: center; color: #222; padding: 0 10px">
                 <h2>Key to Reset Your Password</h2>
-                <h1>${key}</h1>
-                <h4>The following button is for you to reset your password</h4>
+                <h4>THE FOLLOWING BUTTON IS FOR YOU TO RESET YOUR PASSWORD</h4>
                 <button
-                  href=""
                   style="
                     width: 160px;
                     height: 40px;
-                    background-color: rgb(248, 225, 17);
-                    border-color: rgb(248, 225, 17);
+                    background-color: #5d9dff;
+                    border-color: #5d9dff;
                     font-weight: bold;
                     font-size: 14px;
                     color: #111;
                     border-radius: 10px;
                   "
                 >
-                  CLICK HERE
+                <a style="text-decoration: none; color: #222"
+                href="${process.env.URL}${key}">CLICK HERE</a>
+              
                 </button>
               </div>
               <div
@@ -206,7 +204,6 @@ module.exports = {
         }
       }
     } catch (err) {
-      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },
@@ -215,7 +212,6 @@ module.exports = {
     const passwordFormat = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$/;
     try {
       let check = await checkKey(parseInt(user_key));
-      const email = check[0].user_email;
 
       if (check.length === 0) {
         return helper.response(res, 400, "WRONG KEY!");
@@ -231,6 +227,7 @@ module.exports = {
         } else if (confirm_password !== user_password) {
           return helper.response(res, 400, `PASSWORD DIDN'T MATCH`);
         } else {
+          const email = check[0].user_email;
           let salt = bcrypt.genSaltSync(10);
           let hash = bcrypt.hashSync(user_password, salt);
           user_password = hash;
@@ -240,7 +237,6 @@ module.exports = {
         }
       }
     } catch (err) {
-      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },
