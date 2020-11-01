@@ -27,7 +27,7 @@ module.exports = {
       connection.query(
         `UPDATE users SET user_name = "${setData.user_name}", user_phone = "${setData.user_phone}", user_status = "${setData.user_status}" WHERE user_id = ${id}`,
         (err, data) => {
-          !err ? resolve(data) : reject(err);
+          !err ? resolve(data) : reject(new Error(err));
         }
       );
     });
@@ -37,7 +37,17 @@ module.exports = {
       connection.query(
         `UPDATE users SET user_password = "${password}" WHERE user_id = ${id}`,
         (err, data) => {
-          !err ? resolve(data) : reject(err);
+          !err ? resolve(data) : reject(new Error(err));
+        }
+      );
+    });
+  },
+  patchImage: (id, img) => {
+    return new Promise((resolve, reject) => {
+      connection.query(
+        `UPDATE users SET user_image = "${img}" WHERE user_id = ${id}`,
+        (err, data) => {
+          !err ? resolve(data) : reject(new Error(err));
         }
       );
     });

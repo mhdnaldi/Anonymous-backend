@@ -4,8 +4,10 @@ const {
   getUserById,
   patchUser,
   patchPassword,
+  patchImage,
 } = require("../model/users");
 const bcrypt = require("bcrypt");
+const fs = require("fs");
 
 module.exports = {
   getAllUser: async (req, res) => {
@@ -81,6 +83,43 @@ module.exports = {
     } catch (err) {
       console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
+    }
+  },
+  editImage: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const getImage = await getUserById(id);
+      const img = getImage[0].user_image;
+      if (img === "default.png") {
+        let user_image = req.file === undefined ? img : req.file.filename;
+        await patchImage(id, user_image);
+        return helper.response(res, 200, "IMAGE HAS BEEN CHANGE");
+      } else {
+        fs.unlink(`uploads/${img}`, (err) => {
+          !err ? console.log("ok") : console.log(err);
+        });
+        let user_image = req.file === undefined ? img : req.file.filename;
+        await patchImage(id, user_image);
+        return helper.response(res, 200, "IMAGE HAS BEEN CHANGE");
+      }
+    } catch (err) {
+      console.log(err);
+      return helper.response(res, 400, "BAD REQUEST", err);
+    }
+  },
+  deleteImg: async (req, res) => {
+    const { id } = req.params;
+    const getImage = await getUserById(id);
+    const img = getImage[0].user_image;
+    if (img === "default.img") {
+      return helper.response(res, 200, "IMAGE DELETED");
+    } else {
+      fs.unlink(`uploads/${img}`, (err) => {
+        !err ? console.log("OK") : console.log(err);
+      });
+      let user_image = "default.png";
+      await patchImage(id, user_image);
+      return helper.response(res, 200, "IMAGE DELETED");
     }
   },
 };
