@@ -9,6 +9,7 @@ const {
   patchKey,
   checkKey,
   resetPassword,
+  activeAccount,
 } = require("../model/auth");
 const { getAllUser } = require("../model/users");
 
@@ -32,7 +33,7 @@ module.exports = {
       });
 
       if (checkEmail.includes(user_email)) {
-        return helper.response(res, 400, "THIS EMAIL IS ALREADY REGISTERED");
+        return helper.response(res, 400, "THIS EMAIL IS ALREADY TAKEN");
       } else if (user_name === undefined || user_name === "") {
         return helper.response(res, 400, "PLEASE ENTER YOUR NAME");
       } else if (user_email === undefined || user_email === "") {
@@ -52,7 +53,7 @@ module.exports = {
       } else {
         const salt = bcrypt.genSaltSync(10);
         const hash = bcrypt.hashSync(user_password, salt);
-
+        const hashEmail = bcrypt.hashSync(hash, salt);
         const setData = {
           user_name,
           user_email,
@@ -62,9 +63,115 @@ module.exports = {
         };
 
         const result = await registerUser(setData);
-        return helper.response(res, 200, "REGISTER SUCCESS", result);
+
+        const transporter = nodemailer.createTransport({
+          // host: "smtp.gmail.com",
+          // port: 465,
+          // secure: true,
+          service: "gmail",
+          auth: {
+            user: process.env.GMAIL,
+            pass: process.env.GMAIL_PASSWORD,
+          },
+        });
+        const info = await transporter.sendMail(
+          {
+            from: '"ANONYMOUS"',
+            to: user_email,
+            subject: "ACTIVATE ACCOUNT",
+            html: ` <div
+            style="
+              border: 10px solid #031125;
+              border-radius: 10px 10px 32px 32px;
+              font-family: arial;
+              width: 375px;
+              margin: 20px auto;
+              display: grid;
+              grid-template-columns: 1fr;
+              justify-items: center;
+            "
+          >
+            <div style="width: 100%; height: 60px; background-color: #031125">
+              <h2
+                style="
+                  text-align: center;
+                  color: #eee;
+                  letter-spacing: 1px;
+                  padding-top: 0;
+                "
+              >
+                MIXINS
+              </h2>
+            </div>
+            <div
+              style="
+                background: linear-gradient(45deg, #d236e0 0%, #b6781a 100%);
+                text-align: center;
+                color: #fff;
+                padding: 0 15px;
+                font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+              "
+            >
+              <h3 style="text-align: left">Acrivate your Account</h3>
+              <p style="text-align: left; font-size: 14px">
+                Thankyou for regitering with us. In order to activate your account please click the button below.
+              </p>
+              <button
+                style="
+                  width: 160px;
+                  height: 35px;
+                  background-color: #031125;
+                  border-color: #031125;
+                  font-weight: bold;
+                  font-size: 14px;
+                  color: #fff;
+                  border-radius: 10px;
+                  box-shadow: 0 15px 14px -3px rgba(0, 0, 0, 0.4);
+                "
+              >
+                <a
+                  style="text-decoration: none; color: #fff; font-size: 14px"
+                  href="${process.env.URL_ACTIVE}${hashEmail}"
+                  >ACTIVATE ACCOUNT</a
+                >
+              </button>
+              <p style="text-align: left; font-size: 12px">
+                If that doesn't work, copy and paste the following link in your
+                browser:
+                <a href="" style="color: #a6c2eb">${process.env.URL_ACTIVE}${hashEmail}</a>
+              </p>
+              <p style="text-align: left; font-size: 14px">
+                Cheers,<br />
+                Naldi
+              </p>
+            </div>
+            <div
+              style="
+                width: 100%;
+                height: 30px;
+                background-color: #031125;
+                border-radius: 0 0 20px 20px;
+              "
+            ></div>
+          </div>`,
+          },
+          function (err) {
+            if (err) {
+              return helper.response(res, 400, "Failed to send email");
+            }
+          }
+        );
+        return helper.response(
+          res,
+          200,
+          "REGISTER SUCCESS. PLEASE CHECK YOUR EMAIL TO ACTIVATE YOUR ACCOUNT",
+          info
+        );
+
+        // return helper.response(res, 200, "REGISTER SUCCESS", result);
       }
     } catch (err) {
+      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },
@@ -72,50 +179,69 @@ module.exports = {
     try {
       const { user_email, user_password } = req.body;
       const check = await checkUser(user_email);
-      if (check.length > 0) {
-        const checkPassword = bcrypt.compareSync(
-          user_password,
-          check[0].user_password
-        );
-        if (checkPassword) {
-          // JWT PROCESS
-          const {
-            user_id,
-            user_name,
-            user_email,
-            user_phone,
-            user_status,
-            user_image,
-            user_role,
-          } = check[0];
-
-          let payload = {
-            user_id,
-            user_name,
-            user_email,
-            user_phone,
-            user_status,
-            user_image,
-            user_role,
-          };
-
-          const token = jwt.sign(payload, process.env.JWT_KEY, {
-            expiresIn: "24h",
-          });
-
-          payload = { ...payload, token };
-          return helper.response(res, 200, "LOGIN SUCCESS", payload);
-        } else {
-          return helper.response(res, 400, "WRONG PASSWORD");
-        }
-      } else {
+      if (check[0].user_role === null) {
         return helper.response(
           res,
           400,
-          "EMAIL IS NOT REGISTERED PLEASE SIGN UP FIRST"
+          "THIS ACCOUNT IS NOT ACTIVE PLEASE CHECK YOUR INBOX"
         );
+      } else {
+        if (check.length > 0) {
+          const checkPassword = bcrypt.compareSync(
+            user_password,
+            check[0].user_password
+          );
+          if (checkPassword) {
+            // JWT PROCESS
+            const {
+              user_id,
+              user_name,
+              user_email,
+              user_phone,
+              user_status,
+              user_image,
+              user_role,
+            } = check[0];
+
+            let payload = {
+              user_id,
+              user_name,
+              user_email,
+              user_phone,
+              user_status,
+              user_image,
+              user_role,
+            };
+
+            const token = jwt.sign(payload, process.env.JWT_KEY, {
+              expiresIn: "24h",
+            });
+            //
+            payload = { ...payload, token };
+            return helper.response(res, 200, "LOGIN SUCCESS", payload);
+          } else {
+            return helper.response(res, 400, "WRONG PASSWORD");
+          }
+        } else {
+          return helper.response(
+            res,
+            400,
+            "EMAIL IS NOT REGISTERED PLEASE SIGN UP FIRST"
+          );
+        }
       }
     } catch (err) {
+      return helper.response(res, 400, "BAD REQUEST", err);
+    }
+  },
+  activeAccount: async (req, res) => {
+    const { id } = req.params;
+    const { user_role } = req.body;
+    try {
+      await activeAccount(id, user_role);
+      return helper.response(res, 200, "ACCOUNT IS ACTIVE");
+    } catch (err) {
+      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },
@@ -146,45 +272,79 @@ module.exports = {
               from: '"ANONYMOUS"',
               to: user_email,
               subject: "FORGOT PASSWORD",
-              html: `<div
+              html: ` <div
               style="
-                border-radius: 20px;
+                border: 10px solid #031125;
+                border-radius: 10px 10px 32px 32px;
                 font-family: arial;
-                width: 300px;
+                width: 375px;
                 margin: 20px auto;
                 display: grid;
                 grid-template-columns: 1fr;
                 justify-items: center;
-                background-color: rgb(212, 212, 212);
               "
             >
-              <div style="text-align: center; color: #222; padding: 0 10px">
-                <h2>Key to Reset Your Password</h2>
-                <h4>THE FOLLOWING BUTTON IS FOR YOU TO RESET YOUR PASSWORD</h4>
+              <div style="width: 100%; height: 60px; background-color: #031125">
+                <h2
+                  style="
+                    text-align: center;
+                    color: #eee;
+                    letter-spacing: 1px;
+                    padding-top: 0;
+                  "
+                >
+                  MIXINS
+                </h2>
+              </div>
+              <div
+                style="
+                  background: linear-gradient(45deg, #d236e0 0%, #b6781a 100%);
+                  text-align: center;
+                  color: #fff;
+                  padding: 0 15px;
+                  font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+                "
+              >
+                <h3 style="text-align: left">Reset Your Password</h3>
+                <p style="text-align: left; font-size: 14px">
+                  Tap the button below to reset your account password. If you didn't
+                  request a new password, you can safely delete this email.
+                </p>
                 <button
                   style="
                     width: 160px;
-                    height: 40px;
-                    background-color: #5d9dff;
-                    border-color: #5d9dff;
+                    height: 35px;
+                    background-color: #031125;
+                    border-color: #031125;
                     font-weight: bold;
                     font-size: 14px;
-                    color: #111;
+                    color: #fff;
                     border-radius: 10px;
+                    box-shadow: 0 15px 14px -3px rgba(0, 0, 0, 0.4);
                   "
                 >
-                <a style="text-decoration: none; color: #222"
-                href="${process.env.URL}${key}">CLICK HERE</a>
-              
+                  <a
+                    style="text-decoration: none; color: #fff; font-size: 14px"
+                    href="${process.env.URL}${key}"
+                    >CLICK HERE</a
+                  >
                 </button>
+                <p style="text-align: left; font-size: 12px">
+                  If that doesn't work, copy and paste the following link in your
+                  browser:
+                  <a href="" style="color: #a6c2eb">${process.env.URL}${key}</a>
+                </p>
+                <p style="text-align: left; font-size: 14px">
+                  Cheers,<br />
+                  Naldi
+                </p>
               </div>
               <div
                 style="
                   width: 100%;
                   height: 30px;
-                  background-color: #111;
+                  background-color: #031125;
                   border-radius: 0 0 20px 20px;
-                  margin-top: 20px;
                 "
               ></div>
             </div>`,
@@ -198,7 +358,7 @@ module.exports = {
           return helper.response(
             res,
             200,
-            "Email sent. Please check your inbox",
+            "EMAIL SENT. PLEASE CHECK YOUR INBOX",
             info
           );
         }
