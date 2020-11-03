@@ -60,10 +60,10 @@ module.exports = {
       );
     });
   },
-  activeAccount: (id, role) => {
+  activeAccount: (email, role) => {
     return new Promise((resolve, reject) => {
       connection.query(
-        `UPDATE users SET user_role = ${role} WHERE user_id = ${id}`,
+        `UPDATE users SET user_role = ${role} WHERE user_email = "${email}"`,
         (err, data) => {
           !err ? resolve(data) : reject(new Error(err));
         }

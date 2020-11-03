@@ -112,9 +112,9 @@ module.exports = {
                 font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
               "
             >
-              <h3 style="text-align: left">Acrivate your Account</h3>
+              <h3 style="text-align: left">Activate your Account</h3>
               <p style="text-align: left; font-size: 14px">
-                Thankyou for regitering with us. In order to activate your account please click the button below.
+                Thankyou for registering with us. In order to activate your account please click the button below.
               </p>
               <button
                 style="
@@ -132,7 +132,7 @@ module.exports = {
                 <a
                   style="text-decoration: none; color: #fff; font-size: 14px"
                   href="${process.env.URL_ACTIVE}${hashEmail}"
-                  >ACTIVATE ACCOUNT</a
+                  >ACTIVATE</a
                 >
               </button>
               <p style="text-align: left; font-size: 12px">
@@ -235,10 +235,9 @@ module.exports = {
     }
   },
   activeAccount: async (req, res) => {
-    const { id } = req.params;
-    const { user_role } = req.body;
+    const { user_email, user_role } = req.body;
     try {
-      await activeAccount(id, user_role);
+      await activeAccount(user_email, user_role);
       return helper.response(res, 200, "ACCOUNT IS ACTIVE");
     } catch (err) {
       console.log(err);
