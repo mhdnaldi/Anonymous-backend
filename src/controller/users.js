@@ -5,6 +5,7 @@ const {
   patchUser,
   patchPassword,
   patchImage,
+  getFriends,
 } = require("../model/users");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
@@ -34,17 +35,17 @@ module.exports = {
   },
   patchUserById: async (req, res) => {
     const { id } = req.params;
-    let { user_name, user_phone, user_status } = req.body;
+    let { user_full_name, user_phone, user_status } = req.body;
     try {
       const getUser = await getUserById(id);
       console.log(getUser[0]);
       let setData = {
-        user_name,
+        user_full_name,
         user_phone,
         user_status,
       };
-      if (user_name === undefined || user_name === "") {
-        setData.user_name = getUser[0].user_name;
+      if (user_full_name === undefined || user_full_name === "") {
+        setData.user_full_name = getUser[0].user_full_name;
       }
       if (user_phone === undefined || user_phone === "") {
         setData.user_phone = getUser[0].user_phone;
@@ -120,6 +121,24 @@ module.exports = {
       let user_image = "default.png";
       await patchImage(id, user_image);
       return helper.response(res, 200, "IMAGE DELETED");
+    }
+  },
+  addFriends: async (req, res) => {
+    const { id, friends } = req.query;
+    try {
+      let myAccount = await getUserById(id);
+      let myName = myAccount[0].user_name;
+      let myEmail = myAccount[0].user_email;
+      if (friends === myName || myEmail) {
+        return helper.response(res, 400, "YOU CAN'T ADD YOURSELF");
+      }
+      const add = await getFriends(friends);
+      // if(add.length > 0) {
+      //   return helper.response(res, 200, "FRIEND ALREADY EXISTS")
+      // }
+    } catch (err) {
+      console.log(err);
+      return helper.response(res, 400, "BAD REQUEST", err);
     }
   },
 };

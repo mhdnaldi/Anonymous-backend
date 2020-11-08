@@ -23,23 +23,31 @@ module.exports = {
         user_password,
         confirm_password,
       } = req.body;
-
+      const nameRegex = /^[a-zA-Z0-9\-]+$/;
       const mailFormat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
       const passwordFormat = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$/;
 
       let checkEmail = await getAllUser();
+      let checkUserName = await getAllUser();
       checkEmail = checkEmail.map((value) => {
         return value.user_email;
       });
+      checkUserName = checkUserName.map((value) => {
+        return value.user_name;
+      });
 
       if (checkEmail.includes(user_email)) {
-        return helper.response(res, 400, "THIS EMAIL IS ALREADY TAKEN");
+        return helper.response(res, 400, "EMAIL IS ALREADY TAKEN");
+      } else if (checkUserName.includes(user_name)) {
+        return helper.response(res, 400, "USERNAME IS ALREADY TAKEN");
       } else if (user_name === undefined || user_name === "") {
         return helper.response(res, 400, "PLEASE ENTER YOUR NAME");
       } else if (user_email === undefined || user_email === "") {
         return helper.response(res, 400, "PLEASE ENTER YOUR EMAIL");
       } else if (!user_email.match(mailFormat)) {
-        return helper.response(res, 400, "EMAIL IS WRONG");
+        return helper.response(res, 400, "EMAIL FORMAT IS WRONG");
+      } else if (!user_name.match(nameRegex)) {
+        return helper.response(res, 400, "USERNAME IS WRONG, CAN'T USE SPACES");
       } else if (!user_password.match(passwordFormat)) {
         return helper.response(
           res,
@@ -167,8 +175,6 @@ module.exports = {
           "REGISTER SUCCESS. PLEASE CHECK YOUR EMAIL TO ACTIVATE YOUR ACCOUNT",
           info
         );
-
-        // return helper.response(res, 200, "REGISTER SUCCESS", result);
       }
     } catch (err) {
       console.log(err);
@@ -177,8 +183,14 @@ module.exports = {
   },
   login: async (req, res) => {
     try {
-      const { user_email, user_password } = req.body;
-      const check = await checkUser(user_email);
+      const { user_email, user_password, user_name } = req.body;
+      let data = "";
+      if (user_name < 1) {
+        data = user_email;
+      } else if (user_email < 1) {
+        data = user_name;
+      }
+      const check = await checkUser(data);
       if (check[0].user_role === null) {
         return helper.response(
           res,
@@ -226,11 +238,12 @@ module.exports = {
           return helper.response(
             res,
             400,
-            "EMAIL IS NOT REGISTERED PLEASE SIGN UP FIRST"
+            "EMAIL/USERNAME IS NOT REGISTERED PLEASE SIGN UP FIRST"
           );
         }
       }
     } catch (err) {
+      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },

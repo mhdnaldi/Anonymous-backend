@@ -16,11 +16,18 @@ module.exports = {
       });
     });
   },
-  checkUser: (email) => {
+  checkUser: (data) => {
+    const mailFormat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+    let query = "";
+    if (!data.match(mailFormat)) {
+      query = `user_name`;
+    } else {
+      query = `user_email`;
+    }
     return new Promise((resolve, reject) => {
       connection.query(
-        `SELECT user_id, user_name, user_email, user_phone, user_status, user_image, user_password, user_role FROM users WHERE user_email = ?`,
-        email,
+        `SELECT user_id, user_name, user_email, user_phone, user_status, user_image, user_password, user_role FROM users WHERE ${query} = ?`,
+        data,
         (err, data) => {
           !err ? resolve(data) : reject(new Error(err));
         }

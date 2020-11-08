@@ -6,12 +6,14 @@ const {
   editPassword,
   editImage,
   deleteImg,
+  addFriends,
 } = require("../controller/users");
 const uploadImage = require("../middleware/multer");
 const { authorization } = require("../middleware/auth");
 
 router.get("/", getAllUser);
 router.get("/:id", getUserById);
+router.post("/add-friends", addFriends);
 router.patch("/edit-user/:id", patchUserById);
 router.patch("/edit-password/:id", editPassword);
 router.patch("/edit-img/:id", uploadImage, editImage);
