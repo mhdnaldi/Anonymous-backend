@@ -6,6 +6,8 @@ const {
   patchPassword,
   patchImage,
   getFriends,
+  addFriends,
+  checkFriends,
 } = require("../model/users");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
@@ -129,13 +131,22 @@ module.exports = {
       let myAccount = await getUserById(id);
       let myName = myAccount[0].user_name;
       let myEmail = myAccount[0].user_email;
-      if (friends === myName || myEmail) {
+      if (friends === myName || friends === myEmail) {
         return helper.response(res, 400, "YOU CAN'T ADD YOURSELF");
       }
-      const add = await getFriends(friends);
-      // if(add.length > 0) {
-      //   return helper.response(res, 200, "FRIEND ALREADY EXISTS")
-      // }
+      const check = await getFriends(friends);
+      let friends_id = check[0].user_id;
+      const exists = await checkFriends(id, friends_id);
+      if (exists.length > 0)
+        return helper.response(res, 400, "FRIENDS ALREADY EXISTS");
+      const setData = {
+        user_id: id,
+        friends_id,
+        created_at: new Date(),
+      };
+
+      await addFriends(setData);
+      return helper.response(res, 200, "SUCCESS ADD FRIENDS");
     } catch (err) {
       console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
