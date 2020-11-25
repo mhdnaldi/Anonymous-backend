@@ -84,7 +84,6 @@ module.exports = {
         return helper.response(res, 200, "PASSWORD HAS BEEN CHANGED");
       }
     } catch (err) {
-      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },
@@ -106,7 +105,6 @@ module.exports = {
         return helper.response(res, 200, "IMAGE HAS BEEN CHANGE");
       }
     } catch (err) {
-      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },
@@ -148,7 +146,6 @@ module.exports = {
       await addFriends(setData);
       return helper.response(res, 200, "SUCCESS ADD FRIENDS");
     } catch (err) {
-      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },
