@@ -1,6 +1,20 @@
 const helper = require("../helper/index");
-const { createRoom, sendMessage, getRoomId } = require("../model/chat");
+const {
+  createRoom,
+  sendMessage,
+  getRoomId,
+  getAllFriends,
+} = require("../model/chat");
 module.exports = {
+  getContact: async (req, res) => {
+    const { user_id } = req.body;
+    try {
+      const result = await getAllFriends(user_id);
+      return helper.response(res, 200, "SUCCESS GET DATA", result);
+    } catch (err) {
+      return helper.response(res, 400, "BAD REQUEST", err);
+    }
+  },
   createRoom: async (req, res) => {
     let generateRoom = 10000 + Math.floor(Math.random() * 100000);
     const { user_id, friends_id } = req.body;
