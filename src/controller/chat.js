@@ -4,6 +4,7 @@ const {
   sendMessage,
   getRoomId,
   getAllFriends,
+  getRoomChat,
 } = require("../model/chat");
 module.exports = {
   getContact: async (req, res) => {
@@ -12,6 +13,17 @@ module.exports = {
       const result = await getAllFriends(user_id);
       return helper.response(res, 200, "SUCCESS GET DATA", result);
     } catch (err) {
+      return helper.response(res, 400, "BAD REQUEST", err);
+    }
+  },
+  getRoomChat: async (req, res) => {
+    const { user_id } = req.body;
+    try {
+      const result = await getRoomChat(user_id);
+      console.log(result);
+      return helper.response(res, 200, "SUCCESS GET DATA", result);
+    } catch (err) {
+      console.log(err);
       return helper.response(res, 400, "BAD REQUEST", err);
     }
   },

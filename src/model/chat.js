@@ -11,6 +11,16 @@ module.exports = {
       );
     });
   },
+  getRoomChat: (id) => {
+    return new Promise((resolve, reject) => {
+      connection.query(
+        `SELECT friends_id, user_name, user_full_name, user_status, user_image, user_role FROM messages JOIN users on messages.friends_id = users.user_id WHERE messages.user_id = ${id}`,
+        (err, data) => {
+          !err ? resolve(data) : reject(new Error(err));
+        }
+      );
+    });
+  },
   createRoom: (setData) => {
     return new Promise((resolve, reject) => {
       connection.query("INSERT INTO rooms SET ?", setData, (err, data) => {
